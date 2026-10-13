@@ -3,11 +3,13 @@
 ## Notes: A hidden-team tavern card game for 4-8 players. No immediate return.
 ## Notes-frFR: Un coffret de déduction sociale pour 4 à 8 joueurs. Retour immédiat interdit.
 ## Author: ElRapt
-## Version: 1.0.0
+## Version: 1.1.0
 ## SavedVariablesPerCharacter: TimeBombRPDB, TimeBombRPRecovery
+## OptionalDeps: totalRP3
 ## IconTexture: Interface\AddOns\TimeBombRP\Assets\chest.tga
 Core\Util.lua
 Localization\Locale.lua
+Core\Roleplay.lua
 Rules\Engine.lua
 Protocol\Codec.lua
 Transport\Wire.lua

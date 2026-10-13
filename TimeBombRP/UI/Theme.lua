@@ -2,7 +2,7 @@ local ADDON, ns = ...
 
 -- All presentation constants live here. Public seats always use the same palette.
 ns.Theme = {
-    width = 700, height = 480, miniWidth = 330, miniHeight = 40,
+    width = 700, height = 600, miniWidth = 330, miniHeight = 40,
     font = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF",
     fontFlags = "", spacing = 8, border = 1,
     colors = {
@@ -14,7 +14,7 @@ ns.Theme = {
         blue = { .61, .75, .85, 1 }, disabled = { .40, .37, .33, 1 },
     },
     sounds = { turn = SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON or 856 },
-    animation = { reveal = .22, pulse = .85, token = .24 },
+    animation = { reveal = .22, pulse = .85, token = .24, hover = .18, dismiss = .12 },
     texture = "Interface\\Buttons\\WHITE8X8",
     edge = "Interface\\Buttons\\WHITE8X8",
     assetRoot = "Interface\\AddOns\\TimeBombRP\\Assets\\",

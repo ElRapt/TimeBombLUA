@@ -5,6 +5,7 @@
 | Module | Responsabilité |
 |---|---|
 | `Core/Util.lua` | Identités, texte nettoyé, copies, hasard local et tokens indépendants |
+| `Core/Roleplay.lua` | Noms TRP optionnels, correspondance de casse des royaumes et callbacks de profil |
 | `Rules/Engine.lua` | État autoritaire, transitions atomiques, invariants, projections |
 | `Session/Manager.lua` | Invitations, adhésion, intentions, présence, réparation, checkpoints |
 | `Protocol/Codec.lua` | Sérialisation bornée sans exécution de code |
@@ -37,7 +38,7 @@ Au début d'une manche, chaque joueur a h cartes, avec h ≥ 2. Avant sa derniè
 
 ## Enveloppes et authentification
 
-Chaque enveloppe contient `v`, `version`, `ruleset`, `kind`, `sessionId`, `gameId`, `round`, `revision`, `requestId`, `payload`. Compatibilité stricte : version 1.0.0, protocole 1, ruleset `TB_RP_NO_RETURN_V1`.
+Chaque enveloppe contient `v`, `version`, `ruleset`, `kind`, `sessionId`, `gameId`, `round`, `revision`, `requestId`, `payload`. Compatibilité stricte : version 1.1.0, protocole 1, ruleset `TB_RP_NO_RETURN_V1`.
 
 - Une invitation possède un nonce, une expiration et un destinataire réel. Elle ne constitue pas une adhésion.
 - JOIN/JOINED/JOIN_ACK établissent le siège. Le nombre de places est vérifié séquentiellement par l'hôte.
@@ -46,7 +47,7 @@ Chaque enveloppe contient `v`, `version`, `ruleset`, `kind`, `sessionId`, `gameI
 - READY tolère les révisions concurrentes au salon. ACK porte la manche et la partie ; la coupe attend que chacun ait reçu sa projection privée.
 - Les coupes utilisent des deltas de projection. Un trou de révision demande un snapshot complet. Les confirmations intermédiaires ne causent pas une tempête de snapshots.
 
-Les messages privés ne passent jamais sur groupe, raid, guilde ou canal public. Le mode démo ne traverse pas l'adaptateur C_ChatInfo. Les identités RP ne sont pas des adresses réseau ; la version initiale utilise les vrais noms consultables au survol.
+Les messages privés ne passent jamais sur groupe, raid, guilde ou canal public. Le mode démo ne traverse pas l'adaptateur C_ChatInfo. Les identités RP sont résolues localement via les accesseurs publics de TRP3 ; elles ne sont jamais des adresses réseau. Les vrais noms restent consultables au survol.
 
 ## Bornes et récupération
 
@@ -59,3 +60,9 @@ Les SavedVariables `TimeBombRPDB` (options) et `TimeBombRPRecovery` (reprise) so
 ## Validation
 
 Tests de référence : `Tests/test_engine.lua`, `test_network.lua`, `test_integration.lua`, `test_ui.lua`. Les clients du simulateur reçoivent des données sérialisées séparées ; ils ne partagent pas une table autoritaire. `Tests/wow_mock.lua` vérifie des contrats d'appel et interactions, mais ne remplace pas le runtime natif. Voir `VALIDATION.md` et `IN-GAME-CHECKLIST.md`.
+
+## Présentation et emotes (1.1.0)
+
+La main personnelle est construite uniquement depuis `private.counts`, dans l'ordre fixe DEFUSE/SAFE/BOMB, sans slot ni numéro de position. Les sièges adverses utilisent exclusivement leurs slots publics. Un aperçu de survol réutilisable montre le dos caché ou la face publique, avec groupes natifs Scale/Alpha ; il ne capture pas les clics. Changement de révision, fermeture, réduction et ouverture d'un tiroir le nettoient. Le mouvement réduit conserve l'agrandissement sans animation.
+
+`App:Cut` mémorise une intention locale temporaire. `App:AnnounceCut` exige le même acteur, la même session/partie/manche, cible et slot, ainsi qu'une révision publique postérieure. Il consomme l'intention avant tout envoi via `C_ChatInfo.SendChatMessage(..., 'EMOTE')`. Les doublons et snapshots sans intention locale ne produisent rien. L'intention n'est pas sauvegardée ; elle expire après 60 secondes. L'option locale, la démo et le verrouillage du chat sont vérifiés. Aucun secret du moteur n'est lu pour composer l'emote.

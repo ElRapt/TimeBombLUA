@@ -6,7 +6,7 @@ Cette checklist nécessite quatre vrais clients Retail. Tous installent la même
 - [ ] Créer une table nommée ; inviter par nom et par cible. Vérifier l'identité réelle, le nombre de places et « Retour immédiat interdit » sur l'invitation.
 - [ ] Refuser, ignorer, laisser expirer, retenter après cooldown. Une absence de réponse ne doit pas affirmer que l'addon manque. Aucune invitation de groupe WoW.
 - [ ] Accepter simultanément la dernière place d'une table à huit. Un seul siège est attribué. Vérifier versions/ruleset incompatibles.
-- [ ] Tous cliquent Prêt ; l'hôte démarre. Chaque personne voit uniquement son camp et ses comptes, jamais les faces cachées ni leurs positions.
+- [ ] Tous cliquent Prêt ; l'hôte démarre. Chaque personne voit son camp et le contenu de sa main regroupé par type, jamais les positions cachées. Les comptes diminuent après une coupe chez elle.
 - [ ] Discuter aussi longtemps que souhaité ; aucun chronomètre de décision ni bouton de déclaration requis.
 - [ ] Le détenteur sélectionne une carte puis modifie sa sélection avant confirmation. Aucune révélation ou transmission de pince avant réponse de l'hôte.
 - [ ] A coupe chez B : B ne peut choisir A ; B choisit C ; C peut choisir A, mais pas B. Vérifier le texte explicatif et le symbole non accusatoire.
@@ -18,7 +18,11 @@ Cette checklist nécessite quatre vrais clients Retail. Tous installent la même
 - [ ] Départ volontaire confirmé pendant la partie : annulation, aucun camp vainqueur, pas de révélation des secrets restants.
 - [ ] Gagner par désamorçage / bombe / quatre manches. Les rôles de fin et la cause sont justes. Revanche : nouveau jeu, nouvelles préparations, aucune vieille intention réappliquée.
 - [ ] Options : sons désactivés, mouvement réduit, échelle, invitations ignorées, expansion locale facultative ; aucun focus clavier volé.
-- [ ] Noms longs et accentués, huit places, main vide, tiroir d'historique, emote publique modifiable sans écraser le texte déjà saisi.
+- [ ] Noms longs et accentués, huit places, main vide, tiroir d'historique, main personnelle lisible à différentes échelles.
+- [ ] Survol des cartes adverses : zoom et fondu fluides, dos inchangé tant que caché, face correcte si publique, clic toujours fonctionnel. Sortie rapide, changement de carte, réduction et redistribution ne laissent aucun aperçu orphelin. Mouvement réduit : zoom instantané.
+- [ ] TRP3 présent/absent, profils connus/inconnus, changement de profil local/distant : nom RP actualisé, vraie identité au survol, invitations inchangées.
+- [ ] Emotes activées : une seule ligne publique par coupe confirmée, envoyée par son auteur, cible RP correcte et résultat vrai/faux fil/bombe. Rien sur sélection seule, coupe refusée, démo ou `/reload`. Le champ de discussion déjà saisi reste intact.
+- [ ] Désactiver les emotes : aucun envoi sur ses propres coupes. Réactiver sans rejouer le passé. Chat verrouillé : notice locale et aucun envoi différé après déverrouillage.
 - [ ] `/tb demo` et `/tb demo 8` : mode annoncé, perspectives limitées séparées, aucune émission réseau réelle, aucun checkpoint live remplacé.
 - [ ] Session fermée : absence de trafic périodique, anciennes invitations inopérantes, informations privées nettoyées.
 

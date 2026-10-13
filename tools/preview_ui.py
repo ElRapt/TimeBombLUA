@@ -9,15 +9,18 @@ from PIL import Image,ImageDraw,ImageFont
 ROOT=Path(__file__).resolve().parents[1]
 FONT='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 
-def preview(count):
+def preview(count, hover=False):
     lua=LuaRuntime(unpack_returned_tuples=True)
     ns=lua.table()
     mock=lua.execute((ROOT/'Tests/wow_mock.lua').read_text())
-    for module in ['Core/Util.lua','Localization/Locale.lua','Rules/Engine.lua','Protocol/Codec.lua','Transport/Wire.lua','Session/Manager.lua','UI/Theme.lua','UI/UI.lua','Core/Demo.lua']:
+    for module in ['Core/Util.lua','Localization/Locale.lua','Core/Roleplay.lua','Rules/Engine.lua','Protocol/Codec.lua','Transport/Wire.lua','Session/Manager.lua','UI/Theme.lua','UI/UI.lua','Core/Demo.lua']:
         lua.execute((ROOT/'TimeBombRP'/module).read_text(),'TimeBombRP',ns)
     lua.globals().NS=ns
     lua.globals().COUNT=count
     ui=lua.execute("local d=NS.Demo.New(COUNT,function() end,function() end); local c={id=d.clients[1].id,isDemo=true,transportStatus='CONNECTED'};local u=NS.UI.New(c,{scale=1});u:Render(d.clients[1]:GetView(),'SNAPSHOT');u:Show();return u")
+    if hover:
+        lua.globals().PREVIEW_UI=ui
+        lua.execute('PREVIEW_UI.seats[1].cards[1]:Fire("OnEnter")')
     objects=list(mock.objects.values())
     # Lua objects are keyed by their creation index for stable identity in Python.
     for i,o in enumerate(objects):o['_i']=i
@@ -95,5 +98,6 @@ def preview(count):
     cropped=full.crop((x-8,y-8,x+w+8,y+h+8))
     out=Image.new('RGBA',(cropped.width,cropped.height+30),(18,17,21,255));out.alpha_composite(cropped,(0,30))
     ImageDraw.Draw(out).text((10,7),'APERÇU HORS JEU — appels UI simulés, rendu approximatif',font=ImageFont.truetype(FONT,12),fill=(218,207,184,255))
-    path=ROOT/'docs'/f'ui-preview-{count}.png';out.convert('RGB').save(path);print(path)
+    path=ROOT/'docs'/(f'ui-preview-{count}-hover.png' if hover else f'ui-preview-{count}.png');out.convert('RGB').save(path);print(path)
 for n in [4,8]:preview(n)
+preview(8,hover=True)

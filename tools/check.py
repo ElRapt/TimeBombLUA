@@ -18,7 +18,9 @@ for path in sorted(addon.rglob('*.lua')):
     text=path.read_text()
     ok,err=compile_lua(text,str(path))
     assert ok,err
-    assert not re.search(r'\b(?:loadstring|dofile|loadfile|SendChatMessage|InviteUnit)\s*\(',text),path
+    assert not re.search(r'\b(?:loadstring|dofile|loadfile|InviteUnit)\s*\(',text),path
+    if "SendChatMessage" in text:
+        assert path.relative_to(addon).as_posix()=="Core/Main.lua",path
     assert path.relative_to(addon).as_posix() in entries,path
 textures=list((addon/'Assets').glob('*.tga'))
 expected={'card_back','card_safe','card_defuse','card_bomb','emblem_defuser','emblem_saboteur','pliers','chest','table','ornament','progress_on','progress_off'}
@@ -37,7 +39,7 @@ for path in addon.rglob('*.lua'):
     for asset in re.findall(r'Assets\\\\([a-z_]+)\.tga',path.read_text()): assert asset in expected,asset
 print(f'PASS Lua 5.1 syntax, TOC order, {len(entries)} modules, {len(textures)} RGBA/POT textures, standalone runtime')
 
-archive=ROOT/'dist'/'TimeBombRP-1.0.0.zip'
+archive=ROOT/'dist'/'TimeBombRP-1.1.0.zip'
 if archive.exists():
     with zipfile.ZipFile(archive) as z:
         assert z.testzip() is None

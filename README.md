@@ -1,12 +1,12 @@
-# Time Bomb RP · 1.0.0
+# Time Bomb RP · 1.1.0
 
 Un addon **World of Warcraft Retail** autonome pour jouer à Time Bomb classique en RP, à **4–8 personnes**, avec une variante obligatoire : **aucun retour immédiat de la pince**.
 
-L'addon gère les secrets, les cartes et l'arbitrage. Les personnages gardent leurs discussions, leurs mensonges et leur rythme. Le coffret est un jeu posé sur une table de taverne ; aucun chronomètre ni véritable bombe dans la scène.
+Rôles privés, cartes, invitations, arbitrage et reprise après `/reload`, sans chronomètre.
 
 ## Installer
 
-1. Télécharger [`dist/TimeBombRP-1.0.0.zip`](dist/TimeBombRP-1.0.0.zip).
+1. Télécharger [`dist/TimeBombRP-1.1.0.zip`](dist/TimeBombRP-1.1.0.zip).
 2. Extraire dans `_retail_/Interface/AddOns/`. Le fichier doit se trouver exactement dans `Interface/AddOns/TimeBombRP/TimeBombRP.toc`.
 3. Installer la même version chez chaque participant, puis relancer le client ou faire `/reload`.
 4. Ouvrir avec `/timebomb` ou `/tb`.
@@ -19,7 +19,7 @@ Aucune dépendance d'exécution externe, aucune compilation d'images, aucun comp
 
 Créer une table → inviter par nom ou cible → accepter → tous cliquer Prêt → l'hôte distribue → discuter → sélectionner une carte adverse → confirmer la coupe → transmettre la pince → redistribuer après la manche → résultat → revanche ou départ.
 
-La fenêtre déployée mesure 700×480 ; la barre locale réduite 330×40. Les réglages `*` donnent accès aux sons, au mouvement réduit, à l'échelle, aux invitations ignorées, à l'annulation et au départ confirmé. `?` affiche les règles ; `=` ouvre les faits publics. Fermer ou réduire conserve votre place et laisse les messages arriver.
+La fenêtre déployée mesure 700×600 ; la barre locale réduite 330×40. Votre main occupe un panneau dédié : ses cartes sont regroupées par type, sans lien avec les positions cachées. Survoler une carte adverse affiche un zoom animé de son dos ou de sa face déjà révélée. Les réglages `*` donnent accès aux sons, au mouvement réduit, à l'échelle, aux emotes automatiques, aux invitations ignorées, à l'annulation et au départ confirmé. `?` affiche les règles ; `=` ouvre les faits publics. Fermer ou réduire conserve votre place et laisse les messages arriver.
 
 Le rôle et les comptes privés sont séparés des cartes. **Votre client ne reçoit pas la position des faces cachées, même de vos propres cartes.** L'hôte voit la même projection dans son interface, mais son processus détient nécessairement l'état autoritaire complet. Un hôte modifié peut tricher ; pas de protection contre collusion ou captures d'écran.
 
@@ -35,6 +35,18 @@ A coupe chez B : B ne peut pas choisir A. B coupe chez C : C peut choisir A, mai
 | `/tb demo 8` | Démonstration isolée à huit joueurs |
 
 La démonstration utilise le vrai moteur, la même interface et des clients simulés séparés. Dans les options, « Jouer un coup de démo » et « Changer de point de vue » permettent de la parcourir. Elle n'émet aucun message réseau réel et ne remplace pas la récupération d'une table live.
+
+## Noms RP et emotes
+
+Si Total RP 3 est installé et le profil connu, son nom remplace le nom WoW dans l'interface et les cibles d'emote. Les changements de profil actualisent l'affichage. L'identité réelle reste consultable au survol et sert toujours aux invitations/réseaux. Sans profil TRP, le nom WoW est utilisé.
+
+Les emotes de coupe sont **activées par défaut**, désactivables dans `*` → « Emotes de coupe automatiques ». Seul l'auteur envoie une emote locale `/e`, après confirmation de sa coupe, par exemple :
+
+> Marius coupe chez Fantine. C'est un vrai fil !
+
+Les autres résultats sont « C'est un faux fil. » et « C'est la bombe ! ». WoW fournit le préfixe de l'auteur ; son remplacement par le nom RP dans le chat dépend de TRP3 chez le lecteur. La cible utilise le profil connu chez l'auteur.
+
+Une seule emote réunit la coupe et le résultat public. Aucun envoi au simple survol, à la sélection, après un refus, en démo, ni à la relecture de l'historique après `/reload`. Une réparation réseau peut confirmer une coupe locale encore en attente pendant 60 secondes. Un chat verrouillé empêche l'envoi, sans rejeu ultérieur. Le texte en cours de saisie n'est jamais modifié.
 
 ## Communication et récupération
 
@@ -68,11 +80,11 @@ python tools/build.py
 
 ## Aperçus hors jeu
 
-![Disposition de huit joueurs, rendu approximatif des appels UI simulés](docs/ui-preview-8.png)
+![Disposition de huit joueurs, rendu approximatif des appels UI simulés](https://raw.githubusercontent.com/ElRapt/TimeBombLUA/main/docs/ui-preview-8.png)
 
 Cet aperçu est produit à partir des appels de l'interface avec un double d'API et des métriques de texte approximatives. **Ce n'est pas une capture de WoW.**
 
-![Textures originales](docs/assets-preview.png)
+![Textures originales](https://raw.githubusercontent.com/ElRapt/TimeBombLUA/main/docs/assets-preview.png)
 
 Les textures finales, leurs sources, prompts et empreintes figurent dans [Assets](TimeBombRP/Assets/README.md). Les images peintes sont générées ; les cartes et symboles exacts sont construits par script. Aucun asset commercial de Time Bomb n'est inclus.
 

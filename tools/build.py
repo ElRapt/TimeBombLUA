@@ -3,14 +3,14 @@
 from pathlib import Path
 import zipfile
 ROOT=Path(__file__).resolve().parents[1]
-OUT=ROOT/'dist'/'TimeBombRP-1.0.0.zip'
+OUT=ROOT/'dist'/'TimeBombRP-1.1.0.zip'
 OUT.parent.mkdir(exist_ok=True)
 files=[]
 for path in sorted((ROOT/'TimeBombRP').rglob('*')):
     if path.is_file() and 'Sources' not in path.parts:
         files.append((path,path.relative_to(ROOT).as_posix()))
 for path in sorted((ROOT/'docs').glob('*')):
-    if path.suffix in {'.md','.png'} and path.name!='CONTRACT.md':
+    if path.suffix=='.md' and path.name!='CONTRACT.md':
         files.append((path,'TimeBombRP/docs/'+path.name))
 for name in ['README.md','RULES.md','LICENSE']:
     files.append((ROOT/name,'TimeBombRP/'+name))

@@ -1,5 +1,5 @@
 local ADDON, ns = ...
-ns.VERSION, ns.PROTOCOL, ns.RULESET = '1.0.0', 1, 'TB_RP_NO_RETURN_V1'
+ns.VERSION, ns.PROTOCOL, ns.RULESET = '1.1.0', 1, 'TB_RP_NO_RETURN_V1'
 ns.Util = {}
 local U = ns.Util
 function U.Copy(value, seen)

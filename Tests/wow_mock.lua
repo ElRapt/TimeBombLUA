@@ -36,7 +36,7 @@ function M:SetFrameStrata(v) self.strata=v end
 function M:CreateTexture(name,layer) local o=make('Texture',name,self);o.layer=layer;return o end
 function M:CreateFontString(name,layer) local o=make('FontString',name,self);o.layer=layer;return o end
 function M:CreateAnimationGroup() return make('AnimationGroup',nil,self) end
-function M:CreateAnimation(kind) return make('Animation',nil,self) end
+function M:CreateAnimation(kind) local o=make('Animation',nil,self);o.animationType=kind;return o end
 function M:SetFont(file,height,flags) assert(type(file)=='string' and type(height)=='number' and type(flags)=='string','SetFont argument contract'); self.fontSize=height; return true end
 function M:SetText(text) assert(type(text)=='string' or type(text)=='number' or text==nil,'SetText argument');self.text=tostring(text or '') end
 function M:GetText() return self.text or '' end
@@ -60,7 +60,7 @@ function M:GetVerticalScroll() return self.scroll or 0 end
 function M:SetScrollChild(v) self.child=v end
 function M:Play() self.playing=true end
 function M:Stop() self.playing=false end
-for _,name in ipairs({'RegisterForDrag','SetClampedToScreen','SetMovable','EnableMouse','EnableMouseWheel','SetWordWrap','SetMaxLines','SetJustifyH','SetJustifyV','SetTextInsets','SetMaxBytes','SetSpacing','SetMinMaxValues','SetValueStep','SetObeyStepOnDrag','SetOrientation','SetFromAlpha','SetToAlpha','SetDuration','SetOrder','SetLooping','StartMoving','StopMovingOrSizing','SetOwner','AddLine','RegisterEvent','UnregisterEvent'}) do
+for _,name in ipairs({'RegisterForDrag','SetClampedToScreen','SetMovable','EnableMouse','EnableMouseWheel','SetWordWrap','SetMaxLines','SetJustifyH','SetJustifyV','SetTextInsets','SetMaxBytes','SetSpacing','SetMinMaxValues','SetValueStep','SetObeyStepOnDrag','SetOrientation','SetOrigin','SetScaleFrom','SetScaleTo','SetSmoothing','SetFromAlpha','SetToAlpha','SetDuration','SetOrder','SetLooping','StartMoving','StopMovingOrSizing','SetOwner','AddLine','RegisterEvent','UnregisterEvent'}) do
     M[name]=function(self,...) self[name..'Args']={...} end
 end
 function CreateFrame(kind,name,parent) return make(kind,name,parent or UIParent) end

@@ -103,7 +103,8 @@ function UI:Player(id)
 end
 function UI:Name(id)
     local p = self:Player(id)
-    return clean(p and p.name or id or "", 80)
+    local fallback=p and p.name or id or ""
+    return clean(self:Call("DisplayName",id,fallback) or ns.Roleplay:Name(id,fallback,self.controller.isDemo),80)
 end
 function UI:SavePosition(frame)
     local x,y=frame:GetCenter(); local px,py=UIParent:GetCenter()
@@ -175,9 +176,9 @@ function UI:BuildChrome()
     self.progress=text(f,12,"ivory",662,19); anchor(self.progress,19,53); self.progress:SetJustifyH("CENTER")
     self.banner=panel(f,672,28,"velvet","brassDim"); anchor(self.banner,14,77)
     self.bannerText=single(text(self.banner,11,"ivory",644,16)); anchor(self.bannerText,13,7); self.bannerText:SetJustifyH("CENTER")
-    self.status=single(text(f,10,"muted",662,14)); anchor(self.status,18,466)
+    self.status=single(text(f,10,"muted",662,14)); anchor(self.status,18,T.height-16)
     self.status:SetText(L.STATUS_IDLE)
-    f:SetScript("OnHide",function() self:ReleaseFocus(); hideTooltip() end)
+    f:SetScript("OnHide",function() self:ReleaseFocus(); self:HideCardPreview(true); hideTooltip() end)
     self:Position(f)
     -- A named Escape proxy closes our custom overlays first, then the window.
     self.escape=CreateFrame("Frame","TimeBombRPEscape",f)
@@ -238,7 +239,7 @@ function UI:BuildSeat(index)
             local p=seat.player; local info=p.id
             if p.id==self.controller.id then info=info .. "\n" .. L.YOU end
             if self.view and p.id==self.view.hostId then info=info .. "\n" .. L.HOST end
-            tooltip(seat.nameHit,clean(p.name),clean(info,240))
+            tooltip(seat.nameHit,self:Name(p.id),clean(info,240))
         end
     end); seat.nameHit:SetScript("OnLeave",hideTooltip)
     seat.token=asset(seat,"pliers",25,25); seat.token:SetPoint("TOPRIGHT",-4,-1); seat.token:Hide(); seat.tokenReveal=reveal(seat.token)
@@ -247,7 +248,7 @@ function UI:BuildSeat(index)
     seat.badge=single(text(seat,9,"blue",66,22)); seat.badge:SetPoint("BOTTOMRIGHT",-4,5); seat.badge:SetJustifyH("RIGHT"); seat.badge:SetWordWrap(true); seat.badge:SetMaxLines(2)
     seat.cards={}
     for n=1,5 do
-        local card=CreateFrame("Button",nil,seat,"BackdropTemplate"); card:SetSize(23,36); anchor(card,8+(n-1)*26,25)
+        local card=CreateFrame("Button",nil,seat,"BackdropTemplate"); card.seat=seat; card:SetSize(23,36); anchor(card,8+(n-1)*26,25)
         card:SetBackdrop({bgFile=T.texture,edgeFile=T.edge,edgeSize=1}); card:SetBackdropColor(.05,.03,.025,1); card:SetBackdropBorderColor(unpack(T.colors.brassDim))
         card.texture=asset(card,"card_back",21,34); card.texture:SetPoint("CENTER"); card.flash=reveal(card.texture)
         card.number=single(text(card,8,"ivory",19,10)); card.number:SetPoint("BOTTOM",0,1); card.number:SetJustifyH("CENTER"); card.number:SetText(tostring(n))
@@ -255,10 +256,11 @@ function UI:BuildSeat(index)
             if not seat.player or not card.slot then return end
             local reason=self:CardReason(seat.player,card.slot)
             local face=card.slot.revealed and L[card.slot.face or "SAFE"] or L.CARD_HIDDEN
-            tooltip(card,string.format(L.CARD_INDEX,n,face),reason)
+            self:ShowCardPreview(card,seat.player,n,face,reason)
             if not reason then card:SetBackdropBorderColor(unpack(T.colors.brass)) end
         end)
-        card:SetScript("OnLeave",function() hideTooltip(); self:PaintSelection() end)
+        card:SetScript("OnLeave",function() self:HideCardPreview(); self:PaintSelection() end)
+        card:SetScript("OnHide",function() if self.hoveredCard==card then self:HideCardPreview(true) end end)
         card:SetScript("OnClick",function()
             if seat.player and card.slot and not self:CardReason(seat.player,card.slot) then
                 self.selection={targetId=seat.player.id,slotId=card.slot.id}; self:PaintSelection(); self:RenderCenter()
@@ -267,6 +269,45 @@ function UI:BuildSeat(index)
         seat.cards[n]=card
     end
     return seat
+end
+
+function UI:BuildCardPreview()
+    local f=panel(self.frame,108,184,"wood","brass"); self.cardPreview=f
+    f:SetFrameLevel(self.frame:GetFrameLevel()+20); f:EnableMouse(false)
+    f.texture=asset(f,"card_back",94,146); anchor(f.texture,7,7)
+    f.caption=single(text(f,10,"ivory",100,18)); anchor(f.caption,4,160); f.caption:SetJustifyH("CENTER")
+    local function animation(fromScale,toScale,fromAlpha,toAlpha,duration)
+        local group=f:CreateAnimationGroup()
+        local scale=group:CreateAnimation("Scale"); scale:SetScaleFrom(fromScale,fromScale); scale:SetScaleTo(toScale,toScale)
+        scale:SetOrigin("CENTER",0,0); scale:SetDuration(duration); scale:SetSmoothing("OUT")
+        local alpha=group:CreateAnimation("Alpha"); alpha:SetFromAlpha(fromAlpha); alpha:SetToAlpha(toAlpha); alpha:SetDuration(duration)
+        return group
+    end
+    f.enter=animation(.65,1,0,1,T.animation.hover)
+    f.exit=animation(1,.9,1,0,T.animation.dismiss)
+    f.exit:SetScript("OnFinished",function() if not self.hoveredCard then f:Hide() end end)
+    f:Hide()
+end
+
+function UI:ShowCardPreview(card,player,index,face,reason)
+    if player.id==self.controller.id or not card.slot then return end
+    self:HideCardPreview(true)
+    local f=self.cardPreview; self.hoveredCard=card
+    f:ClearAllPoints()
+    -- Inspect in the center, leaving names, hand and original click areas unobscured.
+    f:SetPoint("TOP",self.center,"TOP",0,-48)
+    f.texture:SetTexture(T.Asset(card.slot.revealed and "card_"..string.lower(card.slot.face) or "card_back"))
+    f.caption:SetText(string.format(L.CARD_NUMBER,index)); f:Show()
+    if not self.settings.reducedMotion then f.enter:Play() end
+    tooltip(f,self:Name(player.id).." · "..face,reason)
+end
+
+function UI:HideCardPreview(immediate)
+    self.hoveredCard=nil; hideTooltip()
+    local f=self.cardPreview; if not f then return end
+    f.enter:Stop(); f.exit:Stop()
+    if immediate or self.settings.reducedMotion then f:Hide()
+    elseif f:IsShown() then f.exit:Play() end
 end
 
 function UI:BuildTable()
@@ -294,13 +335,27 @@ function UI:BuildTable()
     self.inviteSummary=button(self.lobby,L.INVITATIONS,240,function() self:OpenDrawer("invitations") end); anchor(self.inviteSummary,2,119)
     self.readyLabel=text(self.lobby,12,"muted",236,33); anchor(self.readyLabel,4,164); self.readyLabel:SetJustifyH("CENTER")
     self.readyButton=button(self.lobby,L.SET_READY,240,function() self:Call("Ready") end); anchor(self.readyButton,2,202)
-    self.privatePanel=panel(self.tableArea,672,57,"wood","brassDim"); anchor(self.privatePanel,14,405)
-    self.roleIcon=asset(self.privatePanel,"emblem_defuser",40,40); anchor(self.roleIcon,8,8)
-    self.roleCaption=text(self.privatePanel,9,"muted",154,12); anchor(self.roleCaption,54,9); self.roleCaption:SetText(L.YOUR_ROLE)
-    self.role=single(text(self.privatePanel,13,"ivory",158,18)); anchor(self.role,54,25)
-    self.counts=single(text(self.privatePanel,11,"ivory",398,16)); anchor(self.counts,224,10)
-    self.privateHint=text(self.privatePanel,9,"muted",411,24); anchor(self.privateHint,224,30)
-    self.privatePanel:EnableMouse(true); self.privatePanel:SetScript("OnEnter",function() tooltip(self.privatePanel,L.YOUR_ROLE,L.PRIVATE_HINT) end); self.privatePanel:SetScript("OnLeave",hideTooltip)
+    self.privatePanel=panel(self.tableArea,672,174,"wood","brass"); anchor(self.privatePanel,14,405)
+    self.privatePanel:EnableMouse(true)
+    self.privatePanel:SetScript("OnEnter",function() tooltip(self.privatePanel,self:Name(self.controller.id),clean(self.controller.id,100)) end)
+    self.privatePanel:SetScript("OnLeave",hideTooltip)
+    self.handTitle=single(text(self.privatePanel,17,"ivory",410,22)); anchor(self.handTitle,18,12); self.handTitle:SetText(L.YOUR_HAND)
+    self.handBadge=single(text(self.privatePanel,11,"amber",200,18)); self.handBadge:SetPoint("TOPRIGHT",-18,-15); self.handBadge:SetJustifyH("RIGHT")
+    self.roleIcon=asset(self.privatePanel,"emblem_defuser",48,48); anchor(self.roleIcon,18,58)
+    self.roleCaption=text(self.privatePanel,10,"muted",128,14); anchor(self.roleCaption,75,61); self.roleCaption:SetText(L.YOUR_ROLE)
+    self.role=single(text(self.privatePanel,13,"ivory",135,20)); anchor(self.role,75,80)
+    self.counts=single(text(self.privatePanel,10,"muted",200,16)); anchor(self.counts,18,121)
+    self.privateHint=text(self.privatePanel,10,"muted",620,18); anchor(self.privateHint,18,149)
+    self.handCards={}
+    for i=1,5 do
+        local card=CreateFrame("Frame",nil,self.privatePanel); card:SetSize(68,105); anchor(card,239+(i-1)*80,38)
+        card.texture=asset(card,"card_back",66,101); card.texture:SetPoint("TOP")
+        card.label=single(text(card,10,"ivory",66,15)); card.label:SetPoint("BOTTOM",0,3); card.label:SetJustifyH("CENTER")
+        card:EnableMouse(true)
+        card:SetScript("OnEnter",function() if card.face then tooltip(card,L[card.face],L.PRIVATE_HINT) end end)
+        card:SetScript("OnLeave",hideTooltip); card:Hide(); self.handCards[i]=card
+    end
+    self:BuildCardPreview()
     self.tableArea:Hide()
 end
 
@@ -331,20 +386,21 @@ function UI:PaintSelection()
 end
 
 function UI:RenderSeats(animate)
-    local v=self.view; local players=v.players or {}; local count=#players
+    local v=self.view; local players=v.players or {}
     local order={}; local me
     for _,p in ipairs(players) do if p.id==self.controller.id then me=p else order[#order+1]=p end end
-    if me then order[#order+1]=me end
-    local rows=math.max(2,math.ceil(count/2)); local spacing=rows==4 and 71 or (rows==3 and 95 or 139)
+    if me and v.phase=="LOBBY" then order[#order+1]=me end
+    local rows=math.max(2,math.ceil(#order/2)); local spacing=rows==4 and 71 or (rows==3 and 95 or 139)
     for i,seat in ipairs(self.seats) do
         local p=order[i]; seat.player=p
         if not p then seat:Hide()
         else
             seat:Show(); seat:ClearAllPoints()
             local col=(i-1)%2; local row=math.floor((i-1)/2)
+            seat.column=col
             local top=rows==2 and 145 or (rows==3 and 120 or 113)
             anchor(seat,col==0 and 14 or 478,top+row*spacing)
-            seat.name:SetText(clean(p.name or p.id,80))
+            seat.name:SetText(self:Name(p.id))
             seat.name:SetTextColor(unpack(T.colors[p.connected==false and "muted" or "ivory"]))
             seat.token:SetShown(p.id==v.currentHolderId)
             if animate and p.id==v.currentHolderId and p.id~=self.lastHolder then seat.tokenReveal:Play() end
@@ -415,7 +471,7 @@ function UI:RenderCenter()
     if phase=="LOBBY" then
         title=L.LOBBY; local ready=0; local connected=true
         for _,p in ipairs(v.players or {}) do if p.ready then ready=ready+1 end; if p.connected==false then connected=false end end
-        self.readyLabel:SetText(string.format(L.READY_COUNT,ready,#v.players) .. "\n" .. L.LOBBY_HINT)
+        self.readyLabel:SetText(string.format(L.READY_COUNT,ready,#v.players))
         local me=self:Player(self.controller.id); self.readyButton.label:SetText(me and me.ready and L.UNREADY or L.SET_READY)
         enable(self.readyButton,not blocked); enable(self.inviteButton,host and not blocked); enable(self.targetButton,host and not blocked)
         self.inviteInput:SetAlpha(host and 1 or .4); self.inviteInput.box:SetEnabled(host)
@@ -428,8 +484,8 @@ function UI:RenderCenter()
         if v.discardedRole then hint=hint .. "\n" .. string.format(L.DISCARDED_ROLE,L[v.discardedRole]) end
         primary=host and L.REMATCH or L.WAIT_HOST; allowed=host
     else
-        title=v.currentHolderId==self.controller.id and L.YOUR_TURN or L.ACTIVE
-        hint=v.currentHolderId==self.controller.id and L.TURN_HINT or string.format(L.WAIT_TURN,self:Name(v.currentHolderId))
+        title=v.currentHolderId==self.controller.id and L.YOUR_TURN or string.format(L.HOLDER,self:Name(v.currentHolderId))
+        hint=v.currentHolderId==self.controller.id and L.TURN_HINT or ""
         if self.selection then primary=string.format(L.CUT,self:Name(self.selection.targetId)); allowed=v.currentHolderId==self.controller.id end
     end
     local last=v.history and v.history[#v.history]
@@ -446,11 +502,30 @@ function UI:RenderPrivate()
     local v=self.view; local p=v.private
     local valid=p and p.role and p.counts and p.round==v.round and p.gameId==v.gameId and not v.cancelled
     self.roleIcon:SetShown(valid and true or false); self.roleCaption:SetShown(valid and true or false)
+    for _,card in ipairs(self.handCards) do card.face=nil; card:Hide() end
+    local me=self:Player(self.controller.id)
+    local badge=me and me.connected==false and L.DISCONNECTED or v.currentHolderId==self.controller.id and L.YOUR_TURN or ""
+    if v.phase=="LOBBY" then badge=me and me.ready and L.READY or L.NOT_READY end
+    if badge=="" and v.previousHolderId==self.controller.id and v.phase~="GAME_OVER" then badge=L.RETURN_BADGE end
+    self.handBadge:SetText(badge)
+    self.handTitle:SetText(L.YOUR_HAND.." · "..self:Name(self.controller.id))
     if valid then
         self.roleIcon:SetTexture(T.Asset(p.role=="SABOTEUR" and "emblem_saboteur" or "emblem_defuser"))
         self.role:SetText(L[p.role]); local counts=p.counts
-        self.counts:SetText(string.format(L.PRIVATE_COUNTS,counts.SAFE or 0,counts.DEFUSE or 0,counts.BOMB or 0))
-        self.privateHint:SetText(L.PRIVATE_HINT)
+        local total=(counts.SAFE or 0)+(counts.DEFUSE or 0)+(counts.BOMB or 0)
+        self.counts:SetText(string.format(L.HAND_COUNT,total))
+        self.privateHint:SetText(total>0 and L.PRIVATE_HINT or L.PRIVATE_NONE)
+        local i=0
+        -- This is a grouped histogram, never a mapping to public slot handles.
+        for _,face in ipairs({"DEFUSE","SAFE","BOMB"}) do
+            for _=1,counts[face] or 0 do
+                i=i+1; local card=self.handCards[i]
+                if card then
+                    card.face=face; card.texture:SetTexture(T.Asset("card_"..string.lower(face))); card.label:SetText(L[face.."_SHORT"])
+                    card:ClearAllPoints(); anchor(card,239+(5-total)*40+(i-1)*80,38); card:Show()
+                end
+            end
+        end
     else
         self.role:SetText(""); self.counts:SetText("")
         self.privateHint:SetText((v.phase=="LOBBY" or v.cancelled) and L.PRIVATE_EMPTY or L.PRIVATE_SYNC)
@@ -472,20 +547,20 @@ end
 function UI:Render(view,event)
     local old=self.view
     local changed=not old or not view or old.gameId~=view.gameId or old.round~=view.round or old.revision~=view.revision
-    if changed then self.selection=nil end
+    if changed then self.selection=nil; self:HideCardPreview(true) end
     local eventKind=type(event)=="table" and (event.kind or event.type) or event
     local animate=not self.settings.reducedMotion and old and view and old.gameId==view.gameId and old.round==view.round and eventKind=="CUT"
     self.view=view
     self.welcome:SetShown(not view); self.tableArea:SetShown(view~=nil)
     if view then
-        self.tableLabel:SetText((self.controller.isDemo and L.DEMO .. " · " or "") .. clean(view.tableName,80))
+        self.tableLabel:SetText(self.controller.isDemo and (L.DEMO .. " · " .. #view.players) or clean(view.tableName,80))
         if view.phase=="LOBBY" then self.progress:SetText(string.format(L.SEATS,#view.players) .. "  ·  " .. L.RULESET)
         else self.progress:SetText(string.format(L.PROGRESS,view.round or 0,view.cuts or 0,view.playerCount or #view.players,view.defused or 0,view.playerCount or #view.players)) end
         local banner=L.RULESET
         if view.recovering then banner=L.RECOVERING_HINT
         elseif view.suspended then banner=L.SUSPENDED_HINT
         elseif view.previousHolderId and view.phase~="GAME_OVER" then banner=string.format(view.currentHolderId==self.controller.id and L.RETURN_FORBIDDEN or L.RETURN_PUBLIC,self:Name(view.previousHolderId))
-        elseif view.currentHolderId then banner=string.format(L.HOLDER,self:Name(view.currentHolderId)) end
+        end
         if not self.controller.isDemo and self.controller.transportStatus and self.controller.transportStatus~="CONNECTED" then banner=L.ERROR_TRANSPORT end
         self.bannerText:SetText(banner)
         self:RenderSeats(animate); self:RenderCenter(); self:RenderPrivate()
@@ -521,20 +596,20 @@ function UI:BuildDrawer()
     self.scrollDown=button(f,"↓",24,function() shift(100) end); anchor(self.scrollDown,638,339)
     local options=CreateFrame("Frame",nil,f); self.options=options; options:SetSize(636,315); anchor(options,18,51)
     self.checks={}
-    local optionKeys={{"sound","OPTION_SOUND"},{"reducedMotion","OPTION_MOTION"},{"autoExpand","OPTION_EXPAND"},{"ignoreInvites","OPTION_IGNORE"}}
+    local optionKeys={{"sound","OPTION_SOUND"},{"reducedMotion","OPTION_MOTION"},{"autoExpand","OPTION_EXPAND"},{"ignoreInvites","OPTION_IGNORE"},{"autoEmotes","OPTION_EMOTES"}}
     for i,pair in ipairs(optionKeys) do
         local key,labelKey=pair[1],pair[2]
         local check=button(options,"",23,function()
-            local value=not self.settings[key]; self.settings[key]=value; self:Call("SetOption",key,value); self:RefreshDrawer(); self:RenderMini(self.wasYourTurn)
+            local value=not self.settings[key]; self.settings[key]=value; self:Call("SetOption",key,value); self:HideCardPreview(true); self:RefreshDrawer(); self:RenderMini(self.wasYourTurn)
         end)
         anchor(check,0,(i-1)*29); check:SetHeight(23)
         local label=text(options,12,"ivory",565,20); anchor(label,33,4+(i-1)*29); label:SetText(L[labelKey])
         self.checks[key]=check
     end
-    local scaleTitle=text(options,11,"muted",170,17); anchor(scaleTitle,0,128); scaleTitle:SetText(L.OPTION_SCALE)
-    self.scaleValue=text(options,11,"ivory",70,17); anchor(self.scaleValue,512,128)
+    local scaleTitle=text(options,11,"muted",170,17); anchor(scaleTitle,0,157); scaleTitle:SetText(L.OPTION_SCALE)
+    self.scaleValue=text(options,11,"ivory",70,17); anchor(self.scaleValue,512,157)
     local slider=CreateFrame("Slider",nil,options,"BackdropTemplate"); self.scaleSlider=slider
-    slider:SetSize(300,16); anchor(slider,184,127); slider:SetOrientation("HORIZONTAL"); slider:SetMinMaxValues(.7,1.5); slider:SetValueStep(.05); slider:SetObeyStepOnDrag(true)
+    slider:SetSize(300,16); anchor(slider,184,156); slider:SetOrientation("HORIZONTAL"); slider:SetMinMaxValues(.7,1.5); slider:SetValueStep(.05); slider:SetObeyStepOnDrag(true)
     slider:SetBackdrop({bgFile=T.texture,edgeFile=T.edge,edgeSize=1}); slider:SetBackdropColor(unpack(T.colors.panel)); slider:SetBackdropBorderColor(unpack(T.colors.brassDim))
     slider:SetThumbTexture(T.texture); slider:GetThumbTexture():SetVertexColor(unpack(T.colors.brass)); slider:GetThumbTexture():SetSize(10,18)
     slider:SetScript("OnValueChanged",function(_,value)
@@ -542,20 +617,18 @@ function UI:BuildDrawer()
         self.settings.scale=value; self.scaleValue:SetText(string.format(L.SCALE_VALUE,math.floor(value*100+.5)))
         self:Position(self.frame); self:Position(self.mini,true)
     end)
-    local reset=button(options,L.RESET_UI,268,function() self:Call("ResetUI"); self:RefreshDrawer() end); anchor(reset,0,166)
-    self.emoteButton=button(options,L.EMOTE,302,function() self:Call("Emote") end,L.EMOTE_HINT); anchor(self.emoteButton,283,166)
-    self.demo4=button(options,L.DEMO4,268,function() self:Call("Demo",4) end); anchor(self.demo4,0,207)
-    self.demo8=button(options,L.DEMO8,302,function() self:Call("Demo",8) end); anchor(self.demo8,283,207)
-    self.demoNext=button(options,L.DEMO_NEXT,268,function() self:Call("DemoNext") end); anchor(self.demoNext,0,207)
-    self.demoPerspective=button(options,L.DEMO_PERSPECTIVE,302,function() self:Call("DemoPerspective") end); anchor(self.demoPerspective,283,207)
-    self.leaveButton=button(options,L.LEAVE,268,function() self:ConfirmLeave() end); anchor(self.leaveButton,0,251)
-    self.cancelButton=button(options,L.CANCEL_GAME,302,function() self:ConfirmCancel() end); anchor(self.cancelButton,283,251)
-    local hint=text(options,10,"muted",610,29); anchor(hint,0,291); hint:SetText(L.OPTIONS_LOCAL .. " " .. L.OPTIONS_RULE)
+    local reset=button(options,L.RESET_UI,585,function() self:Call("ResetUI"); self:RefreshDrawer() end); anchor(reset,0,185)
+    self.demo4=button(options,L.DEMO4,268,function() self:Call("Demo",4) end); anchor(self.demo4,0,222)
+    self.demo8=button(options,L.DEMO8,302,function() self:Call("Demo",8) end); anchor(self.demo8,283,222)
+    self.demoNext=button(options,L.DEMO_NEXT,268,function() self:Call("DemoNext") end); anchor(self.demoNext,0,222)
+    self.demoPerspective=button(options,L.DEMO_PERSPECTIVE,302,function() self:Call("DemoPerspective") end); anchor(self.demoPerspective,283,222)
+    self.leaveButton=button(options,L.LEAVE,268,function() self:ConfirmLeave() end); anchor(self.leaveButton,0,263)
+    self.cancelButton=button(options,L.CANCEL_GAME,302,function() self:ConfirmCancel() end); anchor(self.cancelButton,283,263)
     f:Hide()
 end
 
 function UI:OpenDrawer(kind)
-    self:ReleaseFocus(); self.drawerKind=kind; self.drawerScroll:SetVerticalScroll(0); self.drawer:Show(); self:RefreshDrawer(); self.escape:Show()
+    self:ReleaseFocus(); self:HideCardPreview(true); self.drawerKind=kind; self.drawerScroll:SetVerticalScroll(0); self.drawer:Show(); self:RefreshDrawer(); self.escape:Show()
 end
 function UI:RefreshDrawer()
     local kind=self.drawerKind or "help"; local isOptions=kind=="options"
@@ -566,7 +639,6 @@ function UI:RefreshDrawer()
         self.scaleSlider:SetValue(self.settings.scale or 1)
         enable(self.leaveButton,self.view~=nil)
         enable(self.cancelButton,self.view~=nil and self.view.hostId==self.controller.id and self.view.phase~="GAME_OVER")
-        enable(self.emoteButton,self.view~=nil and self.view.history and #self.view.history>0)
         self.demo4:SetShown(not self.controller.isDemo); self.demo8:SetShown(not self.controller.isDemo)
         enable(self.demo4,not self.view); enable(self.demo8,not self.view)
         self.demoNext:SetShown(self.controller.isDemo and true or false); self.demoPerspective:SetShown(self.controller.isDemo and true or false)
@@ -586,7 +658,7 @@ function UI:RefreshDrawer()
         self.drawerTitle:SetText(L.INVITATIONS)
         local rows={}
         for target,invite in pairs(self.outgoing or {}) do
-            rows[#rows+1]=clean(target,100) .. "  ·  " .. L[type(invite)=="table" and invite.status or invite or "PENDING"]
+            rows[#rows+1]=self:Name(target) .. " (" .. clean(target,100) .. ")  ·  " .. L[type(invite)=="table" and invite.status or invite or "PENDING"]
         end
         table.sort(rows)
         body=(#rows>0 and table.concat(rows,"\n\n") or L.NO_INVITATIONS) .. "\n\n" .. L.NO_RESPONSE_HINT
@@ -609,12 +681,12 @@ function UI:BuildModal()
 end
 function UI:ConfirmLeave()
     if not self.view then return end
-    self:Expand(); self:ReleaseFocus(); self.modalTitle:SetText(L.LEAVE_TITLE); self.modalBody:SetText(L.LEAVE_BODY); self.modalConfirm.label:SetText(L.YES_LEAVE)
+    self:Expand(); self:ReleaseFocus(); self:HideCardPreview(true); self.modalTitle:SetText(L.LEAVE_TITLE); self.modalBody:SetText(L.LEAVE_BODY); self.modalConfirm.label:SetText(L.YES_LEAVE)
     self.confirmAction=function() self:Call("Leave") end; self.modal:Show(); self.escape:Show()
 end
 function UI:ConfirmCancel()
     if not self.view or self.view.hostId~=self.controller.id then return end
-    self:ReleaseFocus(); self.modalTitle:SetText(L.CANCEL_TITLE); self.modalBody:SetText(L.CANCEL_BODY); self.modalConfirm.label:SetText(L.YES_CANCEL)
+    self:ReleaseFocus(); self:HideCardPreview(true); self.modalTitle:SetText(L.CANCEL_TITLE); self.modalBody:SetText(L.CANCEL_BODY); self.modalConfirm.label:SetText(L.YES_CANCEL)
     self.confirmAction=function() self:Call("Cancel") end; self.modal:Show(); self.escape:Show()
 end
 
@@ -643,7 +715,7 @@ function UI:ShowInvitation(sender,invite)
     if not invite or not invite.nonce or self.dismissedInvites[invite.nonce] or self.settings.ignoreInvites or self.view then return end
     if self.currentInvite and self.currentInvite.nonce~=invite.nonce then return end
     self.currentInvite={sender=sender,nonce=invite.nonce}
-    self.inviteFrom:SetText(string.format(L.INVITE_FROM,clean(sender,100)))
+    self.inviteFrom:SetText(string.format(L.INVITE_FROM,self:Name(sender)))
     self.inviteTable:SetText(string.format(L.INVITE_SEATS,clean(invite.tableName,64),tonumber(invite.playerCount or invite.occupied) or 1))
     local compatible=invite.compatible~=false and (not invite.ruleset or invite.ruleset==ns.RULESET) and (not invite.version or invite.version==ns.VERSION)
     self.inviteCompatibility:SetText(compatible and L.INVITE_COMPATIBLE or L.INVITE_INCOMPATIBLE); enable(self.accept,compatible)

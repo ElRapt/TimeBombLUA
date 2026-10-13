@@ -41,3 +41,15 @@ Le premier test réel à effectuer est quatre joueurs **non groupés, même roya
 ## Présentation
 
 Frames, FontStrings, textures et animations natives. `SetFont` reçoit toujours un chemin chaîne, une taille numérique et des flags chaîne (dont `''`). Les TGA sont livrées sans compression, RGBA 32 bits, dimensions puissances de deux. Leurs en-têtes et pixels sont contrôlés hors jeu ; le rendu exact du client reste dans la checklist manuelle.
+
+## Total RP 3 et animations (1.1.0)
+
+Sources TRP3 consultées : [Total-RP/Total-RP-3, commit f0f6ab7](https://github.com/Total-RP/Total-RP-3/tree/f0f6ab7767d8d324c1b14519ed3b383b41ec0675).
+
+- `Modules/Register/Characters/RegisterMain.lua` : `TRP3_API.register.getCharacterList()` et `getUnitRPNameWithID(unitID, fallback)`. Une table locale réconcilie la casse des identités canoniques avec celle du registre TRP. Aucun accès direct aux SavedVariables de TRP3.
+- `Core/Profiles.lua` : `getPlayerCurrentProfile()` permet d'attendre le chargement du profil local.
+- `Core/Objects/Callback.lua` et `Core/Events.lua` : `RegisterCallback` sur `REGISTER_DATA_UPDATED`, `REGISTER_PROFILES_LOADED`, `WORKFLOW_ON_LOADED` ; invalidation du cache et actualisation de l'UI. TRP3 reste facultatif.
+- `SimpleAnimScaleAPIDocumentation.lua` du miroir Blizzard : `SetScaleFrom(x,y)`, `SetScaleTo(x,y)`, `SetOrigin(point,x,y)`. Les anciennes méthodes de scale ne sont pas utilisées.
+- `ChatInfoDocumentation.lua` : `C_ChatInfo.SendChatMessage(message, 'EMOTE')`, API avec restrictions, sans confirmation de livraison. `InChatMessagingLockdown()` est contrôlé avant l'envoi. Les emotes publiques sont distinctes du transport des états privés ; aucune donnée privée n'y transite.
+
+Le rendu des noms dans le chat et les envois d'emotes restent à tester dans le client Retail réel. Les tests automatisés exercent un double d'API, pas le chat WoW.

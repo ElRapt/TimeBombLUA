@@ -19,5 +19,5 @@ jobs:
       - run: python tools/check.py
       - uses: actions/upload-artifact@v4
         with:
-          name: TimeBombRP-1.0.0
-          path: dist/TimeBombRP-1.0.0.zip
+          name: TimeBombRP-1.1.0
+          path: dist/TimeBombRP-1.1.0.zip
