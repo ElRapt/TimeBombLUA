@@ -1,0 +1,146 @@
+{
+  "name": "TimeBombRP original art set",
+  "version": "1.0.0",
+  "runtime_root": "Interface\\AddOns\\TimeBombRP\\Assets\\",
+  "license": "Original project artwork; see Assets/README.md",
+  "build": "python3 tools/assets_build.py",
+  "verify": "python3 tools/assets_build.py --verify",
+  "generated_source_prompts": [
+    "Sources/prompts.json",
+    "Sources/pliers_prompt.json"
+  ],
+  "textures": [
+    {
+      "file": "card_back.tga",
+      "dimensions": [
+        128,
+        256
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "Original procedural illustration in tools/assets_build.py",
+      "sha256": "4f7c65c5444a7c181942bb950f17da2c4e2331eb19305ec1e2977d82c327fedf"
+    },
+    {
+      "file": "card_safe.tga",
+      "dimensions": [
+        128,
+        256
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "Original procedural illustration in tools/assets_build.py",
+      "sha256": "1b45f5da98c56a154dafa4cd94e609601962d63b6268571cf20f12c6b989b11a"
+    },
+    {
+      "file": "card_defuse.tga",
+      "dimensions": [
+        128,
+        256
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "Original procedural illustration in tools/assets_build.py",
+      "sha256": "9450a8f6d3ed845b0efef8437748b3413adb60af98400d1f0ae7a34cd10f8d77"
+    },
+    {
+      "file": "card_bomb.tga",
+      "dimensions": [
+        128,
+        256
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "Original procedural illustration in tools/assets_build.py",
+      "sha256": "74df540d97ab22d7e4536a41d772b22590b19667fd935be70498988022e2e036"
+    },
+    {
+      "file": "emblem_defuser.tga",
+      "dimensions": [
+        128,
+        128
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "Original procedural illustration in tools/assets_build.py",
+      "sha256": "5215f044b68e695338ff2acf066977dc82b9a08585d199944708f097d70883f8"
+    },
+    {
+      "file": "emblem_saboteur.tga",
+      "dimensions": [
+        128,
+        128
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "Original procedural illustration in tools/assets_build.py",
+      "sha256": "242468cd793a91229110c39d891af28664f1892c72a3fc81a3989a39c715879c"
+    },
+    {
+      "file": "progress_on.tga",
+      "dimensions": [
+        128,
+        128
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "Original procedural illustration in tools/assets_build.py",
+      "sha256": "39635beb708e143987f11f6ea9648c4717474aaf67edbad15b3317f3ffc3942d"
+    },
+    {
+      "file": "progress_off.tga",
+      "dimensions": [
+        128,
+        128
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "Original procedural illustration in tools/assets_build.py",
+      "sha256": "507af9eb6d1635ac5870bab86be4dbe4c661d9bc2645446baae1626afc507d8d"
+    },
+    {
+      "file": "ornament.tga",
+      "dimensions": [
+        128,
+        128
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "Original procedural illustration in tools/assets_build.py",
+      "sha256": "5c322ea964fe64b94ab4791d96f473b1b3324ff3e690cab7e562dd9e4fef242e"
+    },
+    {
+      "file": "chest.tga",
+      "dimensions": [
+        256,
+        256
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "OpenAI imagegen original painted source; deterministic resize/crop",
+      "sha256": "188fbc345d7f22a8b89843786eb4afc778a12b15a870eeec693f380b4ffd15f7"
+    },
+    {
+      "file": "pliers.tga",
+      "dimensions": [
+        256,
+        256
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "transparent cutout",
+      "provenance": "OpenAI imagegen original painted source; deterministic resize/crop",
+      "sha256": "5ec5873482cc2f540b051a8253bac23fbb6ebb9a4277feb16c8e18417dee018e"
+    },
+    {
+      "file": "table.tga",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "format": "TGA type 2; BGRA32; straight alpha; top-left origin",
+      "alpha": "opaque",
+      "provenance": "OpenAI imagegen original painted source; deterministic resize/crop",
+      "sha256": "70e976c6988f9b1970d11855f9ba8f1e346f3478ec51cd9d5fce730ebc3fe94f"
+    }
+  ]
+}
